@@ -136,7 +136,7 @@ class ReactiveAuthTest {
         return HttpClient { request ->
             val builder = Request.Builder().url(request.url)
             val body = request.body?.let {
-                okhttp3.RequestBody.create(it, null)
+                okhttp3.RequestBody.create(null as okhttp3.MediaType?, it)
             }
             builder.method(request.method, body)
             request.headers.forEach { (k, v) -> builder.header(k, v) }
