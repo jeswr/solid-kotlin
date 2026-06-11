@@ -92,6 +92,24 @@ public class SolidSession internal constructor(
         state.accessToken
     }
 
+    /** Whether this session can refresh its tokens. */
+    public val canRefresh: Boolean get() = state.refreshToken != null
+
+    /**
+     * Build a DPoP proof for an outgoing request — the primitive the OkHttp
+     * reactive interceptor uses to sign each call. Replays the cached
+     * `DPoP-Nonce` for the request's host when one is known.
+     */
+    public fun dpopProof(method: String, url: String, accessToken: String): String {
+        val nonce = synchronized(lock) { nonces[hostOf(url)] }
+        return state.dpopKey.proof(method = method, url = url, accessToken = accessToken, nonce = nonce)
+    }
+
+    /** Record a server-supplied `DPoP-Nonce` for [url]'s host, for the next request. */
+    public fun recordNonce(url: String, nonce: String) {
+        synchronized(lock) { nonces[hostOf(url)] = nonce }
+    }
+
     /**
      * Send [request] with `Authorization: DPoP <token>` and a fresh DPoP proof.
      * Handles `use_dpop_nonce` challenges and retries once after a token refresh
@@ -172,6 +190,19 @@ public class SolidSession internal constructor(
     private fun hostOf(url: String): String = runCatching { URI(url).host ?: "" }.getOrDefault("")
 
     public companion object {
+        /**
+         * Construct a session directly from a known [SessionState] (tokens +
+         * DPoP key). For apps that persist their own state, restore it, or the
+         * reactive-auth layer; most callers get a session from
+         * [SolidAuthClient] instead.
+         */
+        public fun fromState(
+            state: SessionState,
+            httpClient: HttpClient,
+            store: SessionStore? = null,
+            storeKey: String? = null,
+        ): SolidSession = SolidSession(state, httpClient, store, storeKey)
+
         /**
          * Open a session with the OAuth `client_credentials` grant, DPoP-bound
          * to a (fresh) proof key — the non-interactive path for credentials
