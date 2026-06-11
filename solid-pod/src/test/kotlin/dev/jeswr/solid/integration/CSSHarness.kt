@@ -34,8 +34,8 @@ internal class HarnessException(message: String) : Exception(message)
 
 /**
  * In-memory Community Solid Server test harness, mirroring solid-swift's
- * CSSHarness: boots `npx -y @solid/community-server@8.0.0-alpha.3` (default
- * config: memory + WAC) on a random free port and provisions isolated accounts
+ * CSSHarness: boots `npx -y @solid/community-server@7` (default config: memory +
+ * WAC) on a random free port and provisions isolated accounts
  * through the CSS account API with client-credentials DPoP tokens. Gated behind
  * `SOLID_KOTLIN_CSS_TESTS=1`.
  */
@@ -55,7 +55,7 @@ internal object CSSHarness {
         val port = freePort()
         val base = URI("http://localhost:$port/")
         val proc = ProcessBuilder(
-            "npx", "-y", "@solid/community-server@8.0.0-alpha.3",
+            "npx", "-y", "@solid/community-server@7",
             "-p", port.toString(), "-b", base.toString(), "-l", "error",
         ).redirectErrorStream(false).start()
         process = proc

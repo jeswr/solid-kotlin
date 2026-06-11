@@ -108,7 +108,9 @@ class CSSIntegrationTest {
 
         val credentials = DynamicRegistration.register(
             provider = provider,
-            redirectURIs = listOf(URI("solidkotlin://oauth/callback")),
+            // CSS's OIDC provider requires native custom-scheme redirect URIs to
+            // use a reverse-domain scheme (RFC 8252 §7.1).
+            redirectURIs = listOf(URI("org.jeswr.solidkotlin://oauth/callback")),
             scopes = listOf("openid", "webid", "offline_access"),
             clientName = "solid-kotlin integration test",
             httpClient = plain,

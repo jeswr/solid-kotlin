@@ -21,9 +21,15 @@ public class OkHttpClientAdapter(private val client: OkHttpClient = OkHttpClient
         builder.method(request.method, body ?: emptyBodyFor(request.method))
         for ((name, value) in request.headers) builder.header(name, value)
         client.newCall(builder.build()).execute().use { response ->
+            // Fold repeated field lines into one comma-joined value (RFC 7230
+            // §3.2.2) instead of letting the last win — Solid servers send
+            // several `Link:` lines (acl, type, describedby) and the discovery
+            // code needs all of them, not just whichever arrives last.
             val headers = LinkedHashMap<String, String>()
             for (i in 0 until response.headers.size) {
-                headers[response.headers.name(i)] = response.headers.value(i)
+                val name = response.headers.name(i)
+                val value = response.headers.value(i)
+                headers[name] = headers[name]?.let { "$it, $value" } ?: value
             }
             return HttpResponse(
                 statusCode = response.code,
