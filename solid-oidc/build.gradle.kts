@@ -10,6 +10,7 @@ plugins {
 // module unit-tests on the JVM with no emulator.
 dependencies {
     api(project(":solid-rdf"))
+    testImplementation(project(":solid-test-support"))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
